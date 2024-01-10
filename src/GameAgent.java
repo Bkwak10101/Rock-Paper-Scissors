@@ -11,10 +11,13 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.util.Hashtable;
+import java.util.Random;
 
 public class GameAgent extends Agent {
     private Hashtable catalogue;
     private GameGui myGui;
+    private Random random = new Random();
+    private String[] moves = {"rock", "paper", "scissors"};
 
     protected void setup() {
         catalogue = new Hashtable();
@@ -25,7 +28,7 @@ public class GameAgent extends Agent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("book-selling");
+        sd.setType("game-starts");
         sd.setName("JADE-Rock-paper-scissors");
         dfd.addServices(sd);
         try {
@@ -34,33 +37,32 @@ public class GameAgent extends Agent {
             fe.printStackTrace();
         }
 
-        addBehaviour(new OfferRequestsServer());
+        addBehaviour(new AnalyzeOpponentMoves());
 
         addBehaviour(new GameServer());
     }
 
     protected void takeDown() {
-        //book selling service deregistration at DF
         try {
             DFService.deregister(this);
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
         myGui.dispose();
-        System.out.println("Seller agent " + getAID().getName() + " terminated.");
+        System.out.println("Player agent" + getAID().getName() + " terminated.");
     }
 
     //invoked from GUI, when a new book is added to the catalogue
-    public void updateCatalogue(final String title, final int price) {
-        addBehaviour(new OneShotBehaviour() {
-            public void action() {
-                catalogue.put(title, new Integer(price));
-                System.out.println(getAID().getLocalName() + ": " + title + " put into the catalogue. Price = " + price);
-            }
-        });
-    }
+//    public void updateCatalogue(final String title, final int price) {
+//        addBehaviour(new OneShotBehaviour() {
+//            public void action() {
+//                catalogue.put(title, new Integer(price));
+//                System.out.println(getAID().getLocalName() + ": " + title + " put into the catalogue. Price = " + price);
+//            }
+//        });
+//    }
 
-    private class OfferRequestsServer extends CyclicBehaviour {
+    private class AnalyzeOpponentMoves extends CyclicBehaviour {
         public void action() {
             //proposals only template
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);

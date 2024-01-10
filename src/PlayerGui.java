@@ -10,7 +10,7 @@ import java.awt.event.WindowEvent;
 class PlayerGui extends JFrame {
     private PlayerAgent myAgent;
 
-    private JTextField titleField;
+    private JTextField moveField;
 
     PlayerGui(PlayerAgent a) {
         super(a.getLocalName());
@@ -19,18 +19,18 @@ class PlayerGui extends JFrame {
 
         JPanel p = new JPanel();
         p.setLayout(new GridLayout(2, 2));
-        p.add(new JLabel("Title:"));
-        titleField = new JTextField(15);
-        p.add(titleField);
+        p.add(new JLabel("Move:"));
+        moveField = new JTextField(15);
+        p.add(moveField);
         getContentPane().add(p, BorderLayout.CENTER);
 
         JButton addButton = new JButton("Search");
         addButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 try {
-                    String title = titleField.getText().trim();
+                    String title = moveField.getText().trim();
                     myAgent.lookForTitle(title);
-                    titleField.setText("");
+                    moveField.setText("");
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(PlayerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }

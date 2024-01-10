@@ -14,14 +14,13 @@ import jade.lang.acl.MessageTemplate;
 
 public class PlayerAgent extends Agent {
     private PlayerGui myGui;
-    private String targetBookTitle;
+    private String playerMove;
 
-    //list of found sellers
-    private AID[] sellerAgents;
+    private AID[] playerAgents;
 
     protected void setup() {
-        targetBookTitle = "";
-        System.out.println("Hello! " + getAID().getLocalName() + " is ready for the purchase order.");
+        playerMove = "";
+        System.out.println("Hello! " + getAID().getLocalName() + " is ready for the game.");
         myGui = new PlayerGui(this);
         myGui.display();
         //time interval for buyer for sending subsequent CFP
@@ -32,20 +31,20 @@ public class PlayerAgent extends Agent {
         addBehaviour(new TickerBehaviour(this, interval) {
             protected void onTick() {
                 //search only if the purchase task was ordered
-                if (!targetBookTitle.equals("")) {
-                    System.out.println(getAID().getLocalName() + ": I'm looking for " + targetBookTitle);
+                if (!playerMove.equals("")) {
+                    System.out.println(getAID().getLocalName() + ": I'm using this move " + playerMove);
                     //update a list of known sellers (DF)
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
-                    sd.setType("book-selling");
+                    sd.setType("game-starts");
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
                         System.out.println(getAID().getLocalName() + ": the following sellers have been found");
-                        sellerAgents = new AID[result.length];
+                        playerAgents = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
-                            sellerAgents[i] = result[i].getName();
-                            System.out.println(sellerAgents[i].getLocalName());
+                            playerAgents[i] = result[i].getName();
+                            System.out.println(playerAgents[i].getLocalName());
                         }
                     } catch (FIPAException fe) {
                         fe.printStackTrace();
@@ -61,8 +60,8 @@ public class PlayerAgent extends Agent {
     public void lookForTitle(final String title) {
         addBehaviour(new OneShotBehaviour() {
             public void action() {
-                targetBookTitle = title;
-                System.out.println(getAID().getLocalName() + ": purchase order for " + targetBookTitle + " accepted");
+                playerMove = title;
+                System.out.println(getAID().getLocalName() + ": purchase order for " + playerMove + " accepted");
             }
         });
     }
@@ -84,10 +83,10 @@ public class PlayerAgent extends Agent {
                 case 0:
                     //call for proposal (CFP) to found sellers
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-                    for (int i = 0; i < sellerAgents.length; ++i) {
-                        cfp.addReceiver(sellerAgents[i]);
+                    for (int i = 0; i < playerAgents.length; ++i) {
+                        cfp.addReceiver(playerAgents[i]);
                     }
-                    cfp.setContent(targetBookTitle);
+                    cfp.setContent(playerMove);
                     cfp.setConversationId("book-trade");
                     cfp.setReplyWith("cfp" + System.currentTimeMillis()); //unique value
                     myAgent.send(cfp);
@@ -109,7 +108,7 @@ public class PlayerAgent extends Agent {
                             }
                         }
                         repliesCnt++;
-                        if (repliesCnt >= sellerAgents.length) {
+                        if (repliesCnt >= playerAgents.length) {
                             //all proposals have been received
                             step = 2;
                         }
@@ -121,7 +120,7 @@ public class PlayerAgent extends Agent {
                     //best proposal consumption - purchase
                     ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     order.addReceiver(bestSeller);
-                    order.setContent(targetBookTitle);
+                    order.setContent(playerMove);
                     order.setConversationId("book-trade");
                     order.setReplyWith("order" + System.currentTimeMillis());
                     myAgent.send(order);
@@ -130,19 +129,19 @@ public class PlayerAgent extends Agent {
                     step = 3;
                     break;
                 case 3:
-                    //seller confirms the transaction
+                    //player confirms the movement
                     reply = myAgent.receive(mt);
                     if (reply != null) {
                         if (reply.getPerformative() == ACLMessage.INFORM) {
                             //purchase succeeded
-                            System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " purchased for " + bestPrice + " from " + reply.getSender().getLocalName());
+                            System.out.println(getAID().getLocalName() + ": " + playerMove + " purchased for " + bestPrice + " from " + reply.getSender().getLocalName());
                             System.out.println(getAID().getLocalName() + ": waiting for the next purchase order.");
-                            targetBookTitle = "";
+                            playerMove = "";
                             //myAgent.doDelete();
                         } else {
-                            System.out.println(getAID().getLocalName() + ": purchase has failed. " + targetBookTitle + " was sold in the meantime.");
+                            System.out.println(getAID().getLocalName() + ": purchase has failed. " + playerMove + " was sold in the meantime.");
                         }
-                        step = 4;    //this state ends the purchase process
+                        step = 4;    //this state ends the game process
                     } else {
                         block();
                     }
@@ -152,7 +151,7 @@ public class PlayerAgent extends Agent {
 
         public boolean done() {
             if (step == 2 && bestSeller == null) {
-                System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " is not on sale.");
+                System.out.println(getAID().getLocalName() + ": " + playerMove + " is not on sale.");
             }
             //process terminates here if purchase has failed (title not on sale) or book was successfully bought
             return ((step == 2 && bestSeller == null) || step == 4);
