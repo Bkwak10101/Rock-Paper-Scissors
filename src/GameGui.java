@@ -7,12 +7,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-class BookSellerGui extends JFrame {
-    private BookSellerAgent myAgent;
+class GameGui extends JFrame {
+    private GameAgent myAgent;
 
     private JTextField titleField, priceField;
 
-    BookSellerGui(BookSellerAgent a) {
+    GameGui(GameAgent a) {
         super(a.getLocalName());
 
         myAgent = a;
@@ -37,7 +37,7 @@ class BookSellerGui extends JFrame {
                     titleField.setText("");
                     priceField.setText("");
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(BookSellerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(GameGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

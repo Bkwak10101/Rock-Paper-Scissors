@@ -1,1 +1,1 @@
-http://192.168.10.105:7778/acc
+http://KOMP315-29.dydaktyka.wszib.edu.pl:7778/acc

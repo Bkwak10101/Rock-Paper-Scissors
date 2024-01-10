@@ -12,13 +12,13 @@ import jade.lang.acl.MessageTemplate;
 
 import java.util.Hashtable;
 
-public class BookSellerAgent extends Agent {
+public class GameAgent extends Agent {
     private Hashtable catalogue;
-    private BookSellerGui myGui;
+    private GameGui myGui;
 
     protected void setup() {
         catalogue = new Hashtable();
-        myGui = new BookSellerGui(this);
+        myGui = new GameGui(this);
         myGui.display();
 
         //book selling service registration at DF
@@ -26,7 +26,7 @@ public class BookSellerAgent extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         sd.setType("book-selling");
-        sd.setName("JADE-book-trading");
+        sd.setName("JADE-Rock-paper-scissors");
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
@@ -36,7 +36,7 @@ public class BookSellerAgent extends Agent {
 
         addBehaviour(new OfferRequestsServer());
 
-        addBehaviour(new PurchaseOrdersServer());
+        addBehaviour(new GameServer());
     }
 
     protected void takeDown() {
@@ -86,7 +86,7 @@ public class BookSellerAgent extends Agent {
     }
 
 
-    private class PurchaseOrdersServer extends CyclicBehaviour {
+    private class GameServer extends CyclicBehaviour {
         public void action() {
             //purchase order as proposal acceptance only template
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);

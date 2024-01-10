@@ -12,8 +12,8 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class BookBuyerAgent extends Agent {
-    private BookBuyerGui myGui;
+public class PlayerAgent extends Agent {
+    private PlayerGui myGui;
     private String targetBookTitle;
 
     //list of found sellers
@@ -22,7 +22,7 @@ public class BookBuyerAgent extends Agent {
     protected void setup() {
         targetBookTitle = "";
         System.out.println("Hello! " + getAID().getLocalName() + " is ready for the purchase order.");
-        myGui = new BookBuyerGui(this);
+        myGui = new PlayerGui(this);
         myGui.display();
         //time interval for buyer for sending subsequent CFP
         //as a CLI argument

@@ -7,12 +7,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-class BookBuyerGui extends JFrame {
-    private BookBuyerAgent myAgent;
+class PlayerGui extends JFrame {
+    private PlayerAgent myAgent;
 
     private JTextField titleField;
 
-    BookBuyerGui(BookBuyerAgent a) {
+    PlayerGui(PlayerAgent a) {
         super(a.getLocalName());
 
         myAgent = a;
@@ -32,7 +32,7 @@ class BookBuyerGui extends JFrame {
                     myAgent.lookForTitle(title);
                     titleField.setText("");
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(BookBuyerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(PlayerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
