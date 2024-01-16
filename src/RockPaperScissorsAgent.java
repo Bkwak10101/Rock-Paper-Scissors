@@ -22,9 +22,19 @@ public class RockPaperScissorsAgent extends Agent {
 
     private AID opponentAID; // You need to set this to the opponent's AID
 
+    // Probabilities for each move
+    private double probRock;
+    private double probPaper;
+    private double probScissors;
+
 
     protected void setup() {
         System.out.println("Hello! Agent " + getAID().getName() + " is ready.");
+
+        // Initialize the probabilities
+        probRock = 0.4; // 40% chance to play rock
+        probPaper = 0.4; // 40% chance to play paper
+        probScissors = 0.2;
 
         // Initialize the move history
         opponentMoveHistory.put("rock", 0);
@@ -107,8 +117,7 @@ public class RockPaperScissorsAgent extends Agent {
                 ACLMessage msg = myAgent.receive(mt);
                 if (msg != null) {
                     String opponentMove = msg.getContent();
-                    System
-                            .out.println(getLocalName() + ": Round " + (roundsPlayed + 1) + " - Opponent played: " + opponentMove);
+                    System.out.println(getLocalName() + ": Round " + (roundsPlayed + 1) + " - Opponent played: " + opponentMove);
                     updateOpponentMoveHistory(opponentMove);
                     String myMove = makeMoveBasedOnHistory();
                     System.out.println(getLocalName() + ": Round " + (roundsPlayed + 1) + " - I played: " + myMove);
@@ -124,37 +133,99 @@ public class RockPaperScissorsAgent extends Agent {
                 System.out.println(getLocalName() + " has finished playing " + maxRounds + " rounds.");
                 myAgent.doDelete(); // Optionally terminate the agent
             }
+            if (roundsPlayed > 0 && roundsPlayed <= maxRounds) {
+                adaptStrategyBasedOnHistory();
+            }
         }
 
-        private String makeMoveBasedOnHistory() {
-            String mostFrequentMove = moves[0];
-            int maxCount = opponentMoveHistory.get(moves[0]);
-
-            for (String move : moves) {
-                int count = opponentMoveHistory.get(move);
-                if (count > maxCount) {
-                    maxCount = count;
-                    mostFrequentMove = move;
-                }
-            }
-
+        private void adaptStrategyBasedOnHistory() {
+            // Adapt strategy by analyzing the most frequent move of the opponent
+            // and adjusting probabilities accordingly
+            String mostFrequentMove = getMostFrequentMove();
+            // Example: Increase the probability of playing
             switch (mostFrequentMove) {
                 case "rock":
-                    return "paper";
+                    // Increase the probability to play paper
+                    probPaper += 0.05;
+                    break;
                 case "paper":
-                    return "scissors";
+                    // Increase the probability to play scissors
+                    probScissors += 0.05;
+                    break;
                 case "scissors":
-                    return "rock";
-                default:
-                    return moves[random.nextInt(moves.length)];
+                    // Increase the probability to play rock
+                    probRock += 0.05;
+                    break;
+            }
+
+            // Ensure the probabilities sum up to 1 after adjustment
+            normalizeProbabilities();
+        }
+
+        private void normalizeProbabilities() {
+            double total = probRock + probPaper + probScissors;
+            probRock /= total;
+            probPaper /= total;
+            probScissors = 1.0 - probRock - probPaper; // Scissors probability is the remainder
+        }
+
+        private String makeMoveBasedOnProbability() {
+            double decision = random.nextDouble();
+            if (decision < probRock) {
+                return "rock";
+            } else if (decision < probRock + probPaper) {
+                return "paper";
+            } else {
+                return "scissors";
             }
         }
 
-        private void updateOpponentMoveHistory(String move) {
-            int count = opponentMoveHistory.getOrDefault(move, 0);
-            opponentMoveHistory.put(move, count + 1);
+        private String getMostFrequentMove() {
+            int rockCount = opponentMoveHistory.getOrDefault("rock", 0);
+            int paperCount = opponentMoveHistory.getOrDefault("paper", 0);
+            int scissorsCount = opponentMoveHistory.getOrDefault("scissors", 0);
+
+            if (rockCount > paperCount && rockCount > scissorsCount) {
+                return "rock";
+            } else if (paperCount > rockCount && paperCount > scissorsCount) {
+                return "paper";
+            } else if (scissorsCount > rockCount && scissorsCount > paperCount) {
+                return "scissors";
+            } else {
+// If there is a tie, pick randomly among the tied moves
+                String[] tiedMoves = new String[]{"rock", "paper", "scissors"};
+                return tiedMoves[random.nextInt(tiedMoves.length)];
+            }
         }
     }
 
 
+    private String makeMoveBasedOnHistory() {
+        String mostFrequentMove = moves[0];
+        int maxCount = opponentMoveHistory.get(moves[0]);
+
+        for (String move : moves) {
+            int count = opponentMoveHistory.get(move);
+            if (count > maxCount) {
+                maxCount = count;
+                mostFrequentMove = move;
+            }
+        }
+
+        switch (mostFrequentMove) {
+            case "rock":
+                return "paper";
+            case "paper":
+                return "scissors";
+            case "scissors":
+                return "rock";
+            default:
+                return moves[random.nextInt(moves.length)];
+        }
+    }
+
+    private void updateOpponentMoveHistory(String move) {
+        int count = opponentMoveHistory.getOrDefault(move, 0);
+        opponentMoveHistory.put(move, count + 1);
+    }
 }
