@@ -15,33 +15,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+// Agent realizujący grę w Kamień-Papier-Nożyce
 public class RockPaperScissorsAgent extends Agent {
     private Map<String, Integer> opponentMoveHistory = new HashMap<>();
     private Random random = new Random();
     private String[] moves = {"rock", "paper", "scissors"};
 
-    private AID opponentAID; // You need to set this to the opponent's AID
+    private AID opponentAID; // AID przeciwnika
 
-    // Probabilities for each move
+    // Prawdopodobieństwa dla każdego ruchu
     private double probRock;
     private double probPaper;
     private double probScissors;
 
-
+    // Inicjalizacja agenta
     protected void setup() {
-        System.out.println("Hello! Agent " + getAID().getName() + " is ready.");
-
-        // Initialize the probabilities
-        probRock = 0.4; // 40% chance to play rock
-        probPaper = 0.4; // 40% chance to play paper
+        // Inicjalizacja prawdopodobieństw dla ruchów
+        probRock = 0.4; // 40% szansa na zagranie kamieniem
+        probPaper = 0.4; // 40% szansa na zagranie papierem
         probScissors = 0.2;
 
-        // Initialize the move history
+        // Inicjalizacja historii ruchów przeciwnika
         opponentMoveHistory.put("rock", 0);
         opponentMoveHistory.put("paper", 0);
         opponentMoveHistory.put("scissors", 0);
 
-        // Register with the DF to be searchable by other agents
+        // Rejestracja agenta w usłudze Directory Facilitator (DF)
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
@@ -55,7 +54,7 @@ public class RockPaperScissorsAgent extends Agent {
             fe.printStackTrace();
         }
 
-        // Add a behavior to search for the opponent agent in the yellow pages
+        // Dodanie zachowania do wyszukiwania przeciwnika w książce telefonicznej (DF)
         addBehaviour(new OneShotBehaviour(this) {
             public void action() {
                 DFAgentDescription template = new DFAgentDescription();
@@ -67,7 +66,7 @@ public class RockPaperScissorsAgent extends Agent {
                     DFAgentDescription[] result = DFService.search(myAgent, template);
                     for (DFAgentDescription dfd : result) {
                         AID provider = dfd.getName();
-                        // Ensure not to select itself as the opponent
+                        // Sprawdzenie, czy agent nie wybiera samego siebie jako przeciwnika
                         if (!provider.equals(getAID())) {
                             opponentAID = provider;
                             break;
@@ -77,27 +76,27 @@ public class RockPaperScissorsAgent extends Agent {
                     fe.printStackTrace();
                 }
 
-                // If an opponent is found and this agent is the starter, send the initial move
+                // Jeśli przeciwnik zostanie znaleziony i agent jest rozpoczynającym, wysyłamy początkowy ruch
                 if (opponentAID != null) {
                     Object[] args = getArguments();
                     if (args != null && args.length > 0 && "starter".equals(args[0])) {
                         String initialMove = moves[random.nextInt(moves.length)];
-                        System.out.println("Agent " + myAgent.getLocalName() + " starts with: " + initialMove
-                        );
+                        System.out.println("Agent " + myAgent.getLocalName() + " zaczyna od: " + initialMove);
                         ACLMessage initialMessage = new ACLMessage(ACLMessage.INFORM);
                         initialMessage.addReceiver(opponentAID);
                         initialMessage.setContent(initialMove);
                         myAgent.send(initialMessage);
                     }
                 } else {
-                    System.out.println("Agent " + myAgent.getLocalName() + " could not find an opponent.");
+                    System.out.println("Agent " + myAgent.getLocalName() + " nie mógł znaleźć przeciwnika.");
                 }
             }
         });
-        // Add the PlayGameBehaviour to handle incoming moves
+        // Dodanie zachowania PlayGameBehaviour do obsługi przychodzących ruchów
         addBehaviour(new PlayGameBehaviour());
     }
 
+    // Metoda wywoływana przy zakończeniu działania agenta
     protected void takeDown() {
         try {
             DFService.deregister(this);
@@ -107,10 +106,12 @@ public class RockPaperScissorsAgent extends Agent {
         System.out.println("Agent " + getAID().getName() + " is terminating.");
     }
 
+    // Klasa wewnętrzna PlayGameBehaviour obsługująca rozgrywkę
     private class PlayGameBehaviour extends CyclicBehaviour {
         private int roundsPlayed = 0;
         private final int maxRounds = 10;
 
+        // Metoda obsługująca kolejne ruchy
         public void action() {
             if (roundsPlayed < maxRounds) {
                 MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
@@ -125,7 +126,7 @@ public class RockPaperScissorsAgent extends Agent {
                     reply.setContent(myMove);
                     send(reply);
 
-                    roundsPlayed++; // Increment the round count
+                    roundsPlayed++;
                 } else {
                     block();
                 }
@@ -139,37 +140,33 @@ public class RockPaperScissorsAgent extends Agent {
             }
         }
 
+        // Metoda dostosowująca strategię na podstawie historii ruchów przeciwnika
         private void adaptStrategyBasedOnHistory() {
-            // Adapt strategy by analyzing the most frequent move of the opponent
-            // and adjusting probabilities accordingly
             String mostFrequentMove = getMostFrequentMove();
-            // Example: Increase the probability of playing
             switch (mostFrequentMove) {
                 case "rock":
-                    // Increase the probability to play paper
                     probPaper += 0.05;
                     break;
                 case "paper":
-                    // Increase the probability to play scissors
                     probScissors += 0.05;
                     break;
                 case "scissors":
-                    // Increase the probability to play rock
                     probRock += 0.05;
                     break;
             }
 
-            // Ensure the probabilities sum up to 1 after adjustment
             normalizeProbabilities();
         }
 
+        // Metoda normalizująca prawdopodobieństwa, aby suma wynosiła 1
         private void normalizeProbabilities() {
             double total = probRock + probPaper + probScissors;
             probRock /= total;
             probPaper /= total;
-            probScissors = 1.0 - probRock - probPaper; // Scissors probability is the remainder
+            probScissors = 1.0 - probRock - probPaper;
         }
 
+        // Metoda zwracająca najczęściej wykonywany ruch przeciwnika
         private String getMostFrequentMove() {
             int rockCount = opponentMoveHistory.getOrDefault("rock", 0);
             int paperCount = opponentMoveHistory.getOrDefault("paper", 0);
@@ -182,14 +179,14 @@ public class RockPaperScissorsAgent extends Agent {
             } else if (scissorsCount > rockCount && scissorsCount > paperCount) {
                 return "scissors";
             } else {
-                // If there is a tie, pick randomly among the tied moves
+                // Jeśli jest remis, losujemy spośród równolicznych ruchów
                 String[] tiedMoves = new String[]{"rock", "paper", "scissors"};
                 return tiedMoves[random.nextInt(tiedMoves.length)];
             }
         }
     }
 
-
+    // Metoda tworząca ruch na podstawie historii ruchów przeciwnika
     private String makeMoveBasedOnHistory() {
         String mostFrequentMove = moves[0];
         int maxCount = opponentMoveHistory.get(moves[0]);
@@ -202,18 +199,16 @@ public class RockPaperScissorsAgent extends Agent {
             }
         }
 
-        switch (mostFrequentMove) {
-            case "rock":
-                return "paper";
-            case "paper":
-                return "scissors";
-            case "scissors":
-                return "rock";
-            default:
-                return moves[random.nextInt(moves.length)];
-        }
+        // Wybór ruchu zgodnie z dostosowaną strategią
+        return switch (mostFrequentMove) {
+            case "rock" -> "paper";
+            case "paper" -> "scissors";
+            case "scissors" -> "rock";
+            default -> moves[random.nextInt(moves.length)];
+        };
     }
 
+    // Metoda aktualizująca historię ruchów przeciwnika
     private void updateOpponentMoveHistory(String move) {
         int count = opponentMoveHistory.getOrDefault(move, 0);
         opponentMoveHistory.put(move, count + 1);
