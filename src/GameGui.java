@@ -61,7 +61,11 @@ class GameGui extends JFrame {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int centerX = (int) screenSize.getWidth() / 2;
         int centerY = (int) screenSize.getHeight() / 2;
-        setLocation(centerX - getWidth() / 2, centerY - getHeight() / 2);
+        setBounds(
+                centerX - getWidth() / 2,
+                centerY - getHeight() / 2 - 200,
+                400,
+                150);
         setVisible(true);
     }
 }
