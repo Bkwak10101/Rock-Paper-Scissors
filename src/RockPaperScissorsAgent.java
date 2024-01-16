@@ -135,6 +135,7 @@ public class RockPaperScissorsAgent extends Agent {
             }
             if (roundsPlayed > 0 && roundsPlayed <= maxRounds) {
                 adaptStrategyBasedOnHistory();
+                System.out.println(getLocalName() + ": Updated Probabilities - Rock: " + probRock + ", Paper: " + probPaper + ", Scissors: " + probScissors);
             }
         }
 
@@ -169,17 +170,6 @@ public class RockPaperScissorsAgent extends Agent {
             probScissors = 1.0 - probRock - probPaper; // Scissors probability is the remainder
         }
 
-        private String makeMoveBasedOnProbability() {
-            double decision = random.nextDouble();
-            if (decision < probRock) {
-                return "rock";
-            } else if (decision < probRock + probPaper) {
-                return "paper";
-            } else {
-                return "scissors";
-            }
-        }
-
         private String getMostFrequentMove() {
             int rockCount = opponentMoveHistory.getOrDefault("rock", 0);
             int paperCount = opponentMoveHistory.getOrDefault("paper", 0);
@@ -192,7 +182,7 @@ public class RockPaperScissorsAgent extends Agent {
             } else if (scissorsCount > rockCount && scissorsCount > paperCount) {
                 return "scissors";
             } else {
-// If there is a tie, pick randomly among the tied moves
+                // If there is a tie, pick randomly among the tied moves
                 String[] tiedMoves = new String[]{"rock", "paper", "scissors"};
                 return tiedMoves[random.nextInt(tiedMoves.length)];
             }
