@@ -20,7 +20,7 @@
     <target name="run" description="create agents">
         <java fork="true" classpath="jade/lib/jade.jar;build" classname="jade.Boot">
             <arg value="-gui"/>
-            <arg value="Game:jadelab2.GameAgent(10000);Player1:jadelab2.PlayerAgent;Player2:jadelab2.PlayerAgent"/>
+            <arg value="Player1:jadelab2.RockPaperScissorsAgent(starter);Player2:jadelab2.RockPaperScissorsAgent"/>
         </java>
     </target>
 </project>
