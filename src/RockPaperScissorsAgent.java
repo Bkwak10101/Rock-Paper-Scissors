@@ -54,44 +54,8 @@ public class RockPaperScissorsAgent extends Agent {
             fe.printStackTrace();
         }
 
-        // Dodanie zachowania do wyszukiwania przeciwnika w książce telefonicznej (DF)
-        addBehaviour(new OneShotBehaviour(this) {
-            public void action() {
-                DFAgentDescription template = new DFAgentDescription();
-                ServiceDescription sd = new ServiceDescription();
-                sd.setType("rock-paper-scissors-player");
-                template.addServices(sd);
-
-                try {
-                    DFAgentDescription[] result = DFService.search(myAgent, template);
-                    for (DFAgentDescription dfd : result) {
-                        AID provider = dfd.getName();
-                        // Sprawdzenie, czy agent nie wybiera samego siebie jako przeciwnika
-                        if (!provider.equals(getAID())) {
-                            opponentAID = provider;
-                            break;
-                        }
-                    }
-                } catch (FIPAException fe) {
-                    fe.printStackTrace();
-                }
-
-                // Jeśli przeciwnik zostanie znaleziony i agent jest rozpoczynającym, wysyłamy początkowy ruch
-                if (opponentAID != null) {
-                    Object[] args = getArguments();
-                    if (args != null && args.length > 0 && "starter".equals(args[0])) {
-                        String initialMove = moves[random.nextInt(moves.length)];
-                        System.out.println("Agent " + myAgent.getLocalName() + " zaczyna od: " + initialMove);
-                        ACLMessage initialMessage = new ACLMessage(ACLMessage.INFORM);
-                        initialMessage.addReceiver(opponentAID);
-                        initialMessage.setContent(initialMove);
-                        myAgent.send(initialMessage);
-                    }
-                } else {
-                    System.out.println("Agent " + myAgent.getLocalName() + " nie mógł znaleźć przeciwnika.");
-                }
-            }
-        });
+        // Dodanie zachowania do wyszukiwania przeciwnika w Directory Facilitator (DF)
+        addBehaviour(new OneShotBehaviour());
         // Dodanie zachowania PlayGameBehaviour do obsługi przychodzących ruchów
         addBehaviour(new PlayGameBehaviour());
     }
@@ -104,6 +68,45 @@ public class RockPaperScissorsAgent extends Agent {
             fe.printStackTrace();
         }
         System.out.println("Agent " + getAID().getName() + " is terminating.");
+    }
+
+    private class OneShotBehaviour extends CyclicBehaviour {
+        public void action() {
+            // jest używane do zapytania DF o inne agenty na podstawie konkretnego typu usługi do zapytania  jest używana wyłącznie do zapytania DF o inne agenty na podstawie typu usługi.
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("rock-paper-scissors-player");
+            template.addServices(sd);
+
+            try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                for (DFAgentDescription dfd : result) {
+                    AID provider = dfd.getName();
+                    // Sprawdzenie, czy agent nie wybiera samego siebie jako przeciwnika
+                    if (!provider.equals(getAID())) {
+                        opponentAID = provider;
+                        break;
+                    }
+                }
+            } catch (FIPAException fe) {
+                fe.printStackTrace();
+            }
+
+            // Jeśli przeciwnik zostanie znaleziony i agent jest rozpoczynającym, wysyłamy początkowy ruch
+            if (opponentAID != null) {
+                Object[] args = getArguments();
+                if (args != null && args.length > 0 && "starter".equals(args[0])) {
+                    String initialMove = moves[random.nextInt(moves.length)];
+                    System.out.println("Agent " + myAgent.getLocalName() + " starts with: " + initialMove);
+                    ACLMessage initialMessage = new ACLMessage(ACLMessage.INFORM);
+                    initialMessage.addReceiver(opponentAID);
+                    initialMessage.setContent(initialMove);
+                    myAgent.send(initialMessage);
+                }
+            } else {
+                System.out.println("Agent " + myAgent.getLocalName() + " could not find the opponent.");
+            }
+        }
     }
 
     // Klasa wewnętrzna PlayGameBehaviour obsługująca rozgrywkę
